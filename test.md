@@ -1,10 +1,10 @@
 ```mermaid
 flowchart LR
   %% ===== Consensus / Networking =====
-  subgraph C[共识与网络 (HotStuff BFT · PoS · VRF · BLS)]
+  subgraph C[共识与网络: HotStuff BFT / PoS / VRF / BLS]
     VRF[VRF 随机信标\n决定提议者/轮换]
     BLS[BLS 聚合签名\n压缩 QC]
-    HS[HotStuff 风格两链BFT\n~1s出块, 即时最终性]
+    HS[HotStuff 风格两链 BFT\n~1s 出块, 即时最终性]
     VRF --> HS --> BLS
   end
 
@@ -20,7 +20,7 @@ flowchart LR
   %% ===== Accounts / Objects =====
   subgraph S[账户与对象模型]
     EOA[EOA 外部账户\nsecp256k1]
-    ACT[Actor 智能体\nPython 程序 + 私有KV状态]
+    ACT[Actor 智能体\nPython 程序 + 私有 KV 状态]
     PVM[Python VM (PVM)\n确定性子集]
     EOA -->|发起交易| ACT
     ACT -->|代码运行| PVM
@@ -35,23 +35,23 @@ flowchart LR
 
   %% ===== Timers / Scheduler =====
   subgraph T[SCHEDULER 原生定时器与调度]
-    TQ1[Block Ring Buffer\n近端O(1)出队]
+    TQ1[Block Ring Buffer\n近端 O(1) 出队]
     TQ2[Epoch Queue\n按纪元批量迁移]
     TQ3[Overflow Sorted Set\n远期定时]
     GBA[Gas Bidding Agent\n上下文竞价(基费/拥塞/余额)]
     TW[TimeWheel + WatchMap\n(高度/时间戳/状态触发)]
     TQ3 --> TQ2 --> TQ1
-    TW -->|"EOB 收敛候选"| GBA -->|"按tip+aging入队"| MB
+    TW -->|"EOB 收敛候选"| GBA -->|"按 tip + aging 入队"| MB
   end
 
   %% ===== Off-chain Compute =====
   subgraph O[可验证 Off-chain 计算]
-    DISP[OffchainTaskDispatcher\n任务定义+结果Schema]
+    DISP[OffchainTaskDispatcher\n任务定义 + 结果 Schema]
     REG[RunnerRegistry\n质押/心跳/健康度]
-    RUN[Runner 执行者\n本地VRF自证选中]
+    RUN[Runner 执行者\n本地 VRF 自证选中]
     SUB[RunnerSubmission\n提交结果/阈值聚合]
-    DEFER[Deferred Callback\n构造延迟事务→交由定时器]
-    ACT -->|"submit_task\n(含result_schema)"| DISP
+    DEFER[Deferred Callback\n构造延迟事务 → 交由定时器]
+    ACT -->|"submit_task\n(含 result_schema)"| DISP
     DISP --> REG
     REG --> RUN -->|"执行或 skip_task"| SUB --> DEFER --> MB --> ACT
   end
@@ -70,7 +70,7 @@ flowchart LR
     CYC[Cycles 计算度量]
     CEL[Cells 字节/数据度量]
     BF[EIP-1559 双基费\n按块反馈调节, 基费焚烧]
-    TIP[小费→提议者/验证者]
+    TIP[小费 → 提议者/验证者]
     CYC --> BF --> TIP
     CEL --> BF
   end
@@ -84,4 +84,5 @@ flowchart LR
   E --> O
   F --> HS
   F --> PVM
+
 ```
