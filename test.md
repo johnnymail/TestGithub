@@ -1,83 +1,74 @@
 ```mermaid
 flowchart LR
-  %% ===== Consensus / Networking =====
-  subgraph C[Consensus & Networking: HotStuff BFT / PoS / VRF / BLS]
-    VRF[VRF random beacon\nselect proposer / rotation]
-    BLS[BLS aggregated signature\ncompress QC]
-    HS[HotStuff-like 2-chain BFT\n~1s block, instant finality]
+  subgraph C[Consensus Networking]
+    VRF[VRF random beacon]
+    HS[HotStuff two chain BFT]
+    BLS[BLS aggregated signature]
     VRF --> HS --> BLS
   end
 
-  %% ===== Data Layers =====
-  subgraph D[Data availability & state persistence]
-    L[Ledger (ordered blocks)]
-    TDB[Triedb (KV) + Hexary MPT\nstate_root commitment]
-    AUX[Aux index rebuild\n(txhash->position, topic->position)]
-    L -->|"replay exec\nbatch write outputs"| TDB
-    TDB -->|"export / refresh"| AUX
+  subgraph D[Data and State]
+    L[Ledger ordered blocks]
+    TDB[Triedb KV Hexary MPT]
+    AUX[Aux index rebuild]
+    L --> TDB
+    TDB --> AUX
   end
 
-  %% ===== Accounts / Objects =====
-  subgraph S[Accounts & objects]
-    EOA[EOA external account\nsecp256k1]
-    ACT[Actor smart agent\nPython code + private KV state]
-    PVM[Python VM (PVM)\ndeterministic subset]
-    EOA -->|send tx| ACT
-    ACT -->|run code| PVM
+  subgraph S[Accounts]
+    EOA[EOA external account]
+    ACT[Actor smart agent]
+    PVM[PVM deterministic]
+    EOA --> ACT
+    ACT --> PVM
   end
 
-  %% ===== Messaging / Mailbox =====
-  subgraph M[Async messaging & mailbox]
-    MSG[Message (async)\nsmall data / transfer]
-    MB[Mailbox\nordered consume, exactly-once]
-    ACT -->|send_message| MSG --> MB --> ACT
+  subgraph M[Messaging]
+    MSG[Async message]
+    MB[Mailbox exactly once]
+    ACT --> MSG --> MB --> ACT
   end
 
-  %% ===== Timers / Scheduler =====
-  subgraph T[Scheduler: native timers]
-    TQ1[Block Ring Buffer\nnear-term O(1) dequeue]
-    TQ2[Epoch Queue\nmigrate by epoch]
-    TQ3[Overflow Sorted Set\nfar-future timers]
-    GBA[Gas Bidding Agent\nbasefee/congestion/balance aware]
-    TW[TimeWheel + WatchMap\n(height/timestamp/state triggers)]
+  subgraph T[Scheduler]
+    TQ1[Block Ring Buffer]
+    TQ2[Epoch Queue]
+    TQ3[Overflow Sorted Set]
+    GBA[Gas Bidding Agent]
+    TW[TimeWheel and WatchMap]
     TQ3 --> TQ2 --> TQ1
-    TW -->|"EOB candidate collection"| GBA -->|"enqueue by tip + aging"| MB
+    TW --> GBA --> MB
   end
 
-  %% ===== Off-chain Compute =====
-  subgraph O[Verifiable off-chain compute]
-    DISP[OffchainTaskDispatcher\ntask def + result schema]
-    REG[RunnerRegistry\nstake / heartbeat / health]
-    RUN[Runner executor\nlocal VRF self-selection]
-    SUB[RunnerSubmission\nsubmit result / threshold agg]
-    DEFER[Deferred Callback\nbuild delayed tx -> timers]
-    ACT -->|"submit_task\n(with result_schema)"| DISP
+  subgraph O[Offchain Compute]
+    DISP[OffchainTaskDispatcher]
+    REG[RunnerRegistry]
+    RUN[Runner executor]
+    SUB[RunnerSubmission]
+    DEFER[Deferred Callback]
+    ACT --> DISP
     DISP --> REG
-    REG --> RUN -->|"execute or skip_task"| SUB --> DEFER --> MB --> ACT
+    REG --> RUN --> SUB --> DEFER --> MB --> ACT
   end
 
-  %% ===== Entitlements / Security =====
   subgraph E[Entitlements]
-    REQ[Actor requires[]\n(e.g., net.http, sec.tee)]
-    PROV[Runner provides[]\n(declared capabilities)]
-    ENF[Runtime enforcement & audit\ngrant/upgrade/revoke traceable]
+    REQ[requires]
+    PROV[provides]
+    ENF[enforcement audit]
     REQ --> ENF
     PROV --> ENF
   end
 
-  %% ===== Fees / Economics =====
-  subgraph F[Economics & fees]
-    CYC[Cycles (compute units)]
-    CEL[Cells (byte/data units)]
-    BF[EIP-1559 style basefee\nper-block feedback, basefee burn]
-    TIP[Tips -> proposer/validators]
+  subgraph F[Fees]
+    CYC[Cycles]
+    CEL[Cells]
+    BF[Basefee EIP1559]
+    TIP[Tips]
     CYC --> BF --> TIP
     CEL --> BF
   end
 
-  %% ===== Cross-links =====
   HS --> L
-  L -. header.state_root .-> TDB
+  L --> TDB
   PVM --> TDB
   MB --> TDB
   O --> TDB
